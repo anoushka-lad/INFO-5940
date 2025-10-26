@@ -1,0 +1,130 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+__pypackages__/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+.env/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+
+# Jupyter Notebook checkpoints and output
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IPython history
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# PyCharm
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+.history/
+
+# Codespaces (local secret devcontainer files)
+.devcontainer/devcontainer.env
+.devcontainer/**.env
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and databases
+*.log
+logs/
+*.sql
+*.sqlite3
+
+# Secrets and keys
+.env
+.env.*
+secrets.yaml
+secrets.yml
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+.netrc
+*.p12
+*.jks
+
+# Credentials and token files
+*credentials*
+*secret*
+*_private.*
+
+# Notebook checkpoints and output artifacts
+output/
+*.nb.html
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# macOS file system
+.Spotlight-V100
+.Trashes
+
+# Windows thumbnail cache files
+ehthumbs.db
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+*.class
+*.jar
+*.war
+
+# Docker
+docker-compose.override.yml
+**/docker-compose.override.yml
+
+# Coverage and build directories
+.cache
+build/
+
+# Misc
+tags
+
+# Do NOT ignore these project data files by default:
+# - If you deliberately want to exclude large data files (e.g., under data/), add rules or a
+#   dedicated `data/.gitignore` in that folder. Be cautious — some data in `data/` may be
+#   intentionally part of the assignment.
+

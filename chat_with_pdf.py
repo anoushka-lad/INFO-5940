@@ -15,7 +15,7 @@ from langchain.memory import ConversationBufferMemory
 # manual fallback to call OpenAI via Cornell endpoint
 from openai import OpenAI
 client = OpenAI(
-    api_key=os.environ["OPENAI_API_KEY"],
+    api_key=os.environ["API_KEY"],
     base_url="https://api.ai.it.cornell.edu",
 )
 
