@@ -1,3 +1,4 @@
+# import standard libraries
 import os
 import io
 import streamlit as st
@@ -5,48 +6,48 @@ from pypdf import PdfReader
 from langchain.schema import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# LangChain RAG components
+# LangChain components
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 
-# OpenAI client for fallback (context-stuffing) path
+# manual fallback to call openai via cornell endpoints
 from openai import OpenAI
 client = OpenAI(
     api_key=os.environ["OPENAI_API_KEY"],
     base_url="https://api.ai.it.cornell.edu",
 )
 
-# ---- Constants ----
-MODEL_CHAT = "openai.gpt-4o-mini"            # Chat model (Cornell endpoint ID)
-MODEL_EMBED = "openai.text-embedding-3-large" # Embedding model (Cornell endpoint ID)
-RETRIEVAL_K = 12                              # Top-k retrieved chunks per query
-CHUNK_SIZE = 500                              # Character chunk size
-CHUNK_OVERLAP = 80                            # Character overlap between chunks
+# constants
+MAX_CONTEXT_CHARS = 120_000
+MODEL_CHAT = "openai.gpt-4o-mini"           
+MODEL_EMBED = "openai.text-embedding-3-large" 
+RETRIEVAL_K = 12                              
+CHUNK_SIZE = 500                             
+CHUNK_OVERLAP = 80                           
 
-st.title("Chat with your Files - Anoushka Lad")
+st.title("Chit-Chat with Your Documents")
 
 uploaded_files = st.file_uploader(
-    "Upload files",
+    "Upload your documents to get started",
     type=("txt", "pdf", "md"),
     accept_multiple_files=True
 )
 
-prompt_text = "Ask something about the files" if uploaded_files else "Upload files"
+prompt_text = "Upload files to get started. Then give me a moment to process your files." if uploaded_files else "Upload files"
 
-# Initialize chat history
+# Chat history and make sure that messages show up in ui
 if "messages" not in st.session_state:
     st.session_state["messages"] = [
-        {"role": "assistant", "content": "Ask questions about the files once uploaded."}
+        {"role": "assistant", "content": "Upload files to get started. Then give me a moment to process your files."}
     ]
 
-# Render prior chat messages
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
 
-# ---------- File Parsing ----------
+# parsing files
 
 def _extract_text(file) -> str:
     """Return text for a single uploaded file (TXT/MD direct decode; PDF per-page extraction)."""
@@ -68,7 +69,7 @@ def _extract_text(file) -> str:
         return data.decode("latin-1", errors="ignore")
 
 
-# ---------- Ingestion & Chunking ----------
+# ingest and chunk documents
 
 def make_documents(files) -> list[Document]:
     """Build Document objects.
@@ -110,17 +111,29 @@ def _files_key(files):
     return tuple(sorted((f.name, getattr(f, "size", None)) for f in files))
 
 
-# ---------- MVP stuffing context (for fallback) ----------
-
+# context for fallback
 def _build_context(files) -> str:
-    """Concatenate full text of all files for the fallback stuffed-context call."""
+    """Concatenate full text of all files for the fallback stuffed-context call (capped)."""
     parts = []
+    total = 0
     for f in files:
-        text = _extract_text(f)
-        if not text.strip():
+        text = _extract_text(f).strip()
+        if not text:
             st.warning(f"No extractable text in {f.name} (possibly a scanned PDF).")
             continue
-        parts.append(f"### {f.name}\n{text}")
+        header = f"### {f.name}\n"
+        need = len(header) + len(text) + 2  # +2 for spacing
+        # Stop if adding this file would exceed the cap
+        if total + need > MAX_CONTEXT_CHARS:
+            # add as much as fits
+            remaining = MAX_CONTEXT_CHARS - total
+            if remaining > len(header):
+                take = remaining - len(header)
+                parts.append(header + text[:max(0, take)])
+                total = MAX_CONTEXT_CHARS
+            break
+        parts.append(header + text)
+        total += need
     return "\n\n".join(parts)
 
 
@@ -140,14 +153,9 @@ if uploaded_files:
         # Reset downstream when files change
         st.session_state.pop("vectorstore", None)
         st.session_state.pop("chain", None)
-        st.success(f"Indexed {len(chunks)} chunks from {len(docs)} document units.")
-
-# Status line for chunk readiness
-if "chunks" in st.session_state:
-    st.caption(f"Chunks ready: {len(st.session_state['chunks'])}")
 
 
-# ---------- RAG: Vector Store & Conversational Chain ----------
+# rag components
 
 def build_vectorstore(chunks) -> Chroma:
     """Create an in-memory Chroma vector store from chunks using OpenAI embeddings."""
@@ -171,24 +179,24 @@ def build_chain(vectorstore) -> ConversationalRetrievalChain:
         return_source_documents=True,
     )
 
-# Build vector store and chain once chunks exist (and if not already built)
+# vectore store and chain after chunks are ready
 if st.session_state.get("chunks") and "vectorstore" not in st.session_state:
     if not st.session_state["chunks"]:
-        st.error("No chunks found. Check files (scanned PDFs may have no extractable text).")
+        st.error("I couldn't find any readable text. Check to make sure that your PDFs aren't scanned images.")
     else:
         try:
-            with st.status("Preparing retriever…", expanded=True) as status:
-                status.write("Embedding chunks into vector store…")
+            with st.status("Please be patient", expanded=True) as status:
+                status.write("I'm analysing your documents...")
                 vs = build_vectorstore(st.session_state["chunks"])
-                status.write("Wiring retriever and chat model…")
+                status.write("I'm setting up the connection between me and your documents...")
                 st.session_state["vectorstore"] = vs
                 st.session_state["chain"] = build_chain(vs)
-                status.update(label="Retriever ready.", state="complete", expanded=False)
+                status.update(label="Ready! You can ask me questions about your files now.", state="complete", expanded=False)
         except Exception as e:
-            st.error(f"Failed to initialize retriever: {e}")
+            st.error(f"Something went wrong while I was getting things ready for your: {e}")
 
 
-# ---------- Chat Flow ----------
+# flow of chat
 
 question = st.chat_input(
     prompt_text,
@@ -196,7 +204,6 @@ question = st.chat_input(
 )
 
 if question:
-    # Persist user turn in UI history
     st.session_state.messages.append({"role": "user", "content": question})
     st.chat_message("user").write(question)
 
@@ -204,12 +211,12 @@ if question:
         st.error("Retriever not ready. Upload files to build the index before asking questions.")
     else:
         with st.chat_message("assistant"):
-            with st.spinner("Searching documents..."):
+            with st.spinner("I'm thinking..."):
                 result = st.session_state["chain"].invoke({"question": question})
                 answer = (result.get("answer", "") or "").strip()
                 sources = result.get("source_documents", [])
 
-                # RAG fallback: if model declines/returns empty, stuff full context and stream
+                # fallback if no answer
                 rag_blank = answer.lower() in {"", "i don't know.", "i don't know", "idk"}
                 if rag_blank:
                     context = _build_context(uploaded_files)
@@ -217,7 +224,6 @@ if question:
                         st.warning("No extractable text found in the uploaded files.")
                         answer = "I don't know."
                         st.markdown(answer)
-                        # Terminal log
                         q_short = (question or "")[:120].replace("\n", " ")
                         print(f"FALLBACK_USED question='{q_short}' context_chars=0 answer_len={len(answer)}")
                     else:
@@ -232,17 +238,15 @@ if question:
                                     ),
                                 },
                                 {"role": "system", "content": f"Document set:\n\n{context}"},
-                                *st.session_state.messages,
+                                {"role": "user", "content": question},  # <-- only the current turn
                             ],
                             stream=True,
                         )
                         answer = st.write_stream(stream)
-                        # Terminal log
                         q_short = (question or "")[:120].replace("\n", " ")
                         ans_len = len(answer) if isinstance(answer, str) else -1
                         print(f"FALLBACK_USED question='{q_short}' context_chars={len(context)} answer_len={ans_len}")
                 else:
-                    # Normal RAG path (answer + optional sources)
                     st.markdown(answer)
                     if sources:
                         with st.expander("Sources"):
@@ -255,5 +259,5 @@ if question:
                     src_count = len(sources) if sources else 0
                     print(f"RAG_USED question='{q_short}' sources={src_count} answer_len={len(answer)}")
 
-    # Persist assistant turn in UI history
+    # assistant turn in ui
     st.session_state.messages.append({"role": "assistant", "content": answer})

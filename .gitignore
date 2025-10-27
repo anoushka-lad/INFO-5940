@@ -128,3 +128,4 @@ tags
 #   dedicated `data/.gitignore` in that folder. Be cautious — some data in `data/` may be
 #   intentionally part of the assignment.
 
+.env
