@@ -4,43 +4,40 @@ A Streamlit app that ingests PDF, TXT, or MD files, creates vector embeddings, a
 
 ## Features and Design Justifications
 Data ingestion
-    - Supported files: .pdf parsed page by page with pypdf, .txt and .md decoded as whole files.
-    - No OCR: scanned PDFs will show a warning and are ignored.
-    - Metadata: PDFs carry source=filename and page=i, text files carry source=filename.
+- Supported files: .pdf parsed page by page with pypdf, .txt and .md decoded as whole files.
+- No OCR: scanned PDFs will show a warning and are ignored.
+- Metadata: PDFs carry source=filename and page=i, text files carry source=filename.
 
 Chunking and indexing
-    - Splitter: RecursiveCharacterTextSplitter with chunk_size=500, chunk_overlap=80.
-    Rationale: 500 chars keep chunks semantically coherent while fitting model context and 80 overlap preserves cross-chunk continuity.
-    - Embeddings: text-embedding-3-large via langchain_openai.
-    - Vector store: in-memory Chroma.from_documents.
-    Rationale: simple and involves zero setup with index resetting when files change.
+- Splitter: RecursiveCharacterTextSplitter with chunk_size=500, chunk_overlap=80. Rationale: 500 chars keep chunks semantically coherent while fitting model context and 80 overlap preserves cross-chunk continuity.
+- Embeddings: text-embedding-3-large via langchain_openai.
+- Vector store: in-memory Chroma.from_documents. Rationale: simple and involves zero setup with index resetting when files change.
 
 Retrieval + chat
-    - Retriever k: RETRIEVAL_K=12.
-    Rationale: modest recall without flooding the model.
-    - LLM: gpt-4o-mini via ChatOpenAI(temperature=0.2) for stable answers.
-    - Conversation memory: ConversationBufferMemory to let follow-ups reuse chat history.
-    - Citations: filenames and PDF page numbers are shown in a Sources expander.
+- Retriever k: RETRIEVAL_K=12. Rationale: modest recall without flooding the model.
+- LLM: gpt-4o-mini via ChatOpenAI(temperature=0.2) for stable answers.
+- Conversation memory: ConversationBufferMemory to let follow-ups reuse chat history.
+- Citations: filenames and PDF page numbers are shown in a Sources expander.
 
 Fallback behavior
-    - If the retrieval chain returns empty or “I don’t know,” the app makes a second pass that stuffs only your file text into the prompt, capped at MAX_CONTEXT_CHARS=120000.
-    - The fallback system message says: use only the provided document set. If the answer is not present, say it is not available in the provided documents. This prevents hallucinations. If nothing extractable is found, the app tells you so.
+- If the retrieval chain returns empty or “I don’t know,” the app makes a second pass that stuffs only your file text into the prompt, capped at MAX_CONTEXT_CHARS=120000.
+- The fallback system message says: use only the provided document set. If the answer is not present, say it is not available in the provided documents. This prevents hallucinations. If nothing extractable is found, the app tells you so.
 
 UI flow
-    - Upload multiple files, then the app lists them and builds chunks, lastly vector index and chain are created.
-    - Chat input is disabled until the index is ready.
-    - Answers render with a spinner and an optional Sources panel.
-    - Uploading new files invalidates the old index and rebuilds it automatically.
+- Upload multiple files, then the app lists them and builds chunks, lastly vector index and chain are created.
+- Chat input is disabled until the index is ready.
+- Answers render with a spinner and an optional Sources panel.
+- Uploading new files invalidates the old index and rebuilds it automatically.
 
 Error handling and guardrails
-    - Warns on unreadable or empty files.
-    - Catches vectorstore or chain build errors and reports them in the UI.
-    - Will not answer from outside knowledge. If content is not in your files, it will say so to prevent hallucination.
+- Warns on unreadable or empty files.
+- Catches vectorstore or chain build errors and reports them in the UI.
+- Will not answer from outside knowledge. If content is not in your files, it will say so to prevent hallucination.
 
 Limitations
-    - No OCR for scanned PDFs.
-    - In-memory index only. Restart or file changes clear it.
-    - Citations list sources, not highlighted spans.
+- No OCR for scanned PDFs.
+- In-memory index only. Restart or file changes clear it.
+- Citations list sources, not highlighted spans.
 
 ## Prerequisites
 - Python 3.11+
