@@ -35,12 +35,12 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True
 )
 
-prompt_text = "Upload files to get started. Then give me a moment to process your files." if uploaded_files else "Upload files"
+prompt_text = "Ask me anything about your documents." if uploaded_files else "Upload files"
 
 # Chat history and make sure that messages show up in ui
 if "messages" not in st.session_state:
     st.session_state["messages"] = [
-        {"role": "assistant", "content": "Upload files to get started. Then give me a moment to process your files."}
+        {"role": "assistant", "content": "Upload files to get started. Then wait a moment for me to process them."}
     ]
 
 for msg in st.session_state.messages:

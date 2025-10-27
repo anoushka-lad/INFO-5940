@@ -10,6 +10,7 @@ A Streamlit app that ingests PDF, TXT, or MD files, creates vector embeddings, a
 - Citations (filename + page) included with answers
 - Fallback mode: stuffs full context when retrieval fails
 - Warns on scanned/unreadable PDFs
+- To prevent unsupported answers, replies will only use information from the uploaded text and will note when a question is not answered in the document 
 
 ## Prerequisites
 - Python 3.11+
