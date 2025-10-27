@@ -1,4 +1,4 @@
-# Assignment 1 — Document Q&A Chatbot
+# Assignment 1: Document Q&A Chatbot
 
 A Streamlit app that ingests PDF, TXT, or MD files, creates vector embeddings, and provides a conversational chatbot with cited answers.
 
