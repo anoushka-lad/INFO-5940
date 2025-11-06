@@ -1,0 +1,50 @@
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# Environment / secrets
+.env
+*.env
+.secrets/
+secrets.json
+*.pem
+*.key
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~ 
+
+# Test / coverage
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Streamlit
+.streamlit/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Node
+node_modules/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
