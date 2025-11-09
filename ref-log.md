@@ -1,1 +1,13 @@
+## Reflection
+My key learning from this assignment is that explication in responsibilities and handoffs is essential in the “agent = LLM + tools + memory” equation. Iterating on the prompt design showed me how fragile and precise this process is. 
+
+Early versions of my prompt unintentionally caused the Planner and Reviewer agent to attempt overlapping tasks. For example, after adding the Visa and Entry Requirements section, the Planner claimed that no visa would be required for a trip to Europe. Importantly, this claim wasn’t marked as needing to be verified. Simultaneously, the Reviewer was rewriting the itinerary largely for style (i.e. changing activities and pacing), without actually targeting questionable claims. The agents weren’t working complementarily and were ultimately producing unreliable information. 
+
+I updated the prompts to clarify responsibilities. For the Planner, I emphasized that: (a) the internet should not be used, (b) it is not responsible for exactness, and (c) it must add [verify] tags when it is guessing. For the Reviewer, I ensured that it should: (a) prioritise [verify] marked items, run focused internet_search calls, and provide summarised/paraphrased findings. After these changes, new prompts produced better and more reliable information. 
+
+Another salient design choice I made was the “What I Checked and Validated” table because this is a clear and effective way to show how decisions are tied to specific claims, supported by evidence, and different from its predecessor. Other important choices included the “Visa and Entry Requirements” section because visas are complex and high-stakes, while being easy to hallucines. As well, the Open Issues section forced the Reviewer to admit uncertainty while giving the user clear instructions about what they still need to check. 
+
+## Documented Gen AI Usage
+- Brainsotming itinerary elements: Before starting, I used Gen AI to help me comprehensively brainstorm what kinds of sections are useful in a travel itinerary. I used it's ideas as a starting point, selecting, adapting and structuring them to fit the Planner and Review needs. Core choices about roles, sections and how to write them into the prompt were my own. 
+- Copyediting final prompt: After I had finalised my Planner and Reviewer instructions, and stress tested multiple iterations myself (including the structure), I used Gen AI to review for grammar, lingistic clarity, and formatting/consistency easy. The underlying design, division of resposibility, specific word choice and priorities remained the same, Gen AI only supported the presentation of my own deisgn choices more cleanly. 
 
